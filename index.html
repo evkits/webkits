@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>EvColors</title>
+    <script src="https://cdn.bootcss.com/vue/2.4.2/vue.min.js"></script>
+    <script src="https://cdn.bootcss.com/clipboard.js/1.7.1/clipboard.min.js"></script>
+    <style>
+        *{
+            margin: 0;
+            padding:0;
+            transition: all .5s;
+        }
+        ::-webkit-scrollbar{
+            width:5px;
+            height: 0px;
+        }
+        ::-webkit-scrollbar-thumb{
+            color:black;
+            background: black;
+        }
+        #app{
+            display: flex;
+            flex-direction: column;
+        }
+        .card{
+            box-shadow:0 0 10px -2px gray;
+            margin:10px;
+        }
+        .header{
+            flex-shrink: 0;
+            height: 75px;
+            box-shadow:0 10px 30px -15px gray;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding:0 20px;
+        }
+        .header .logo{
+            font-size:30px;
+            user-select: none;
+        }
+        .header .trigger{
+            width:50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .header .trigger:hover{
+            box-shadow: 0 0 30px -2px gray;
+        }
+        .content{
+            display: flex;
+            flex-direction: row;
+            margin-top:10px;
+        }
+        .colors{
+            display: flex;
+            flex-flow:row wrap;
+            justify-content: space-around;
+            overflow: scroll;
+        }
+
+        .colors .color{
+            width:50px;
+            height: 50px;
+            margin:1px;
+            cursor: pointer;
+        }
+        .tool-pane .color-block{
+            flex-shrink: 0;
+            width:250px;
+            height: 250px;
+        }
+        .tool-pane .color-value,.tool-pane .ctrl-opt{
+            margin-top: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .tool-pane .item{
+            display: flex;
+            padding:10px 10px;
+            align-items: center;
+        }
+        .tool-pane .item .value{
+            padding-left:10px;
+        }
+        .tool-pane .item .value.switcher{
+            display: flex;
+            align-items: center;
+        }
+        .switcher .switch-item{
+            padding:5px 10px;
+            border:1px solid #ccc;
+            color:#ccc;
+            cursor: pointer;
+        }
+        .switcher .switch-item:hover{
+            border-color: #11ddaa;
+            color:#11ddaa;
+        }
+
+        .switcher .switch-item.active{
+            border-color: #11ddaa;
+            color:#11ddaa;
+        }
+
+        .links{
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .links .link{
+            padding:10px 20px;
+            border:1px solid gray;
+            border-radius:5px;
+            margin:0 5px;
+            display: block;
+            cursor: pointer;
+            text-decoration: none;
+            color:black;
+        }
+        .links .link:hover{
+            background: #11cc88;
+            border-color: #11cc88;
+            box-shadow: 0 0 30px -5px #11cc88;
+            color:white;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" :style="{height:wh+'px'}">
+        <div class="header">
+            <span class="logo" :style="{textShadow:'0 0 10px '+(color.hex ?color.hex() :''),color:color.hex ?color.hex() :''}">Ev-Color Picker</span>
+            <span class="trigger" :style="{background:color.hex ?color.hex() :''}" @click="onToolToggle"></span>
+        </div>
+ 
+        <div class="content">
+            <div class="colors card">
+                <div class="color" 
+                    v-for="color in colors"
+                    :data-clipboard-text="copyType===0 ?color.hex() :color.rgb()"
+                    @click="onColorClick(color)"
+                    :style="{background:color.hex?color.hex() :'',width:50+blockSize*25+'px',height:50+blockSize*25+'px'}"></div>
+            </div>
+            <div class="tool-pane card" :style="{width:toolVisible ?'300px' :'0px'}">
+                <div class="color-block" :style="{background:color.hex ?color.hex() :''}"></div>
+                <div class="color-value">
+                    <div class="item">
+                        <span class="label">HEX:</span>
+                        <span class="value">{{color.hex ?color.hex() :''}}</span>
+                    </div>
+                    <div class="item">
+                        <span class="label">RGB:</span>
+                        <span class="value">{{color.rgb ?color.rgb() :''}}</span>
+                    </div>
+                </div>
+                <div class="ctrl-opt">
+                    <div class="item">
+                        <span class="label">复制类型：</span>
+                        <span class="value switcher">
+                            <span class="switch-item" :class="{active:copyType===0}" @click="onTypeSwitch(0)">HEX</span>
+                            <span class="switch-item" :class="{active:copyType!==0}" @click="onTypeSwitch(1)">RGB</span>
+                        </span>
+                    </div>
+                    <div class="item">
+                        <span class="label">色块尺寸：</span>
+                        <span class="value switcher">
+                            <span class="switch-item" :class="{active:blockSize===-1}" @click="onSizeSwitch(-1)">小</span>
+                            <span class="switch-item" :class="{active:blockSize===0}" @click="onSizeSwitch(0)">中</span>
+                            <span class="switch-item" :class="{active:blockSize===1}" @click="onSizeSwitch(1)">大</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="item tips" :style="{lineHeight:'20px',fontSize:'15px',color:'#aaa'}">点击左侧色块会直接复制到系统剪切板中</div>
+                <div class="item links">
+                    <a class="link" href='http://evolify.cn/' target="_blank">About Me</a>
+                    <a class="link" href='https://github.com/evkits/webkits' target="_blank">Github</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+<script>
+    var app=new Vue({
+        el:'#app',
+        data:{
+            colors:[],
+            toolVisible:true,
+            blockSize:0,
+            copyType:0,  //0代表复制hex代码，1代表复制rgb代码
+            color:new RGB(34,170,255),
+            wh:0
+        },
+        mounted(){
+            this.wh=window.innerHeight
+            for(let i=0;i<=255;i+=17){
+                for (let j=0;j<=255;j+=17){
+                    for (let k=0;k<=255;k+=17){
+                        this.colors.push(new RGB(i,j,k))
+                    }
+                }
+            }
+            new Clipboard('.colors .color')
+        },
+        methods:{
+            onColorClick(color){
+                this.color=color
+            },
+            onTypeSwitch(type){
+                this.copyType=type
+            },
+            onSizeSwitch(size){
+                this.blockSize=size
+            },
+            onToolToggle(){
+                this.toolVisible=!this.toolVisible
+            }
+        }
+    })
+
+    function hexColor(rgb){
+        return '#'+toHex(i)+toHex(j)+toHex(k)
+    }
+    function rgbColor(rgb){
+        return 'rgb('+rgb.r+','+rgb.g+','+rgb.b+')'
+    }
+
+    function toHex(n){
+        n=n>255 ?255 : n<0 ?0 :n
+        return n<16? '0'+n.toString(16) :n.toString(16)
+    }
+    function reverse(rgb){
+        return new RGB(255-rgb.r,255-rgb.g,255-rgb.b)
+    }
+
+    function RGB(r,g,b){
+        this.r=r
+        this.g=g
+        this.b=b
+    }
+    RGB.prototype.hex=function(){
+        return '#'+toHex(this.r)+toHex(this.g)+toHex(this.b)
+    },
+    RGB.prototype.rgb=function(){
+        return 'rgb('+this.r+','+this.g+','+this.b+')'        
+    }
+    RGB.prototype.reverse=function(){
+        this.r=255-this.r
+        this.g=255-this.g
+        this.b=255-this.b
+        return this
+    }
+</script>
+</body>
+</html>

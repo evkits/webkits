@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>web-kits</title>
+    <script src="https://cdn.bootcss.com/vue/2.4.2/vue.min.js"></script>
+    <style>
+        *{
+            margin: 0;
+            padding:0;
+            transition: all .5s;
+        }
+        ::-webkit-scrollbar{
+            width:5px;
+            height: 0px;
+        }
+        ::-webkit-scrollbar-thumb{
+            color:black;
+            background: black;
+        }
+        #app{
+            display: flex;
+            flex-direction: column;
+        }
+        .card{
+            box-shadow:0 0 10px -2px gray;
+            margin:10px;
+        }
+        .header{
+            flex-shrink: 0;
+            height: 75px;
+            box-shadow:0 10px 30px -15px gray;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding:0 20px;
+        }
+        .header .logo{
+            font-size:30px;
+            user-select: none;
+        }
+        .header .trigger{
+            width:50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .header .trigger:hover{
+            box-shadow: 0 0 30px -2px gray;
+        }
+        .content{
+            display: flex;
+            flex-direction: column;
+            margin-top:10px;
+            padding:20px 100px;
+        }
+
+        .content .title{
+            font-size: 20px;
+        }
+
+        .tools{
+            display: flex;
+            flex-flow:row wrap;
+            align-items: center;
+            justify-content: center;
+            padding:30px;
+        }
+        .tools .tool{
+            text-decoration: none;
+            color:black;
+            padding:20px 40px;
+            box-shadow: 0 0 10px -2px gray;
+        }
+        .tools .tool:hover{
+            box-shadow: 0 5px 20px -5px gray;
+        }
+
+
+        .links{
+            position: absolute;
+            bottom: 50px;
+            left:50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .links .link{
+            padding:10px 20px;
+            border:1px solid gray;
+            border-radius:5px;
+            margin:0 5px;
+            display: block;
+            cursor: pointer;
+            text-decoration: none;
+            color:black;
+        }
+        .links .link:hover{
+            background: #11cc88;
+            border-color: #11cc88;
+            box-shadow: 0 0 30px -5px #11cc88;
+            color:white;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" :style="{height:wh+'px'}">
+        <div class="header">
+            <span class="logo" :style="{textShadow:'0 0 10px '+(color.hex ?color.hex() :''),color:color.hex ?color.hex() :''}">Ev-Web Tools</span>
+        </div>
+ 
+        <div class="content">
+            <span class="title">前端工具包</span>
+
+            <div class="tools">
+                <a href="./color.html" class="tool">取色器</a>
+            </div>
+
+            <div class="links">
+                <a class="link" href='http://evolify.cn/' target="_blank">About Me</a>
+                <a class="link" href='https://github.com/evkits/webkits' target="_blank">Github</a>
+            </div>
+        </div>
+
+    </div>
+
+
+<script>
+    var app=new Vue({
+        el:'#app',
+        data:{
+            colors:[],
+            toolVisible:true,
+            blockSize:0,
+            copyType:0,  //0代表复制hex代码，1代表复制rgb代码
+            color:new RGB(34,170,255),
+            wh:0
+        },
+        mounted(){
+            this.wh=window.innerHeight
+        },
+        methods:{
+        }
+    })
+
+    function hexColor(rgb){
+        return '#'+toHex(i)+toHex(j)+toHex(k)
+    }
+    function rgbColor(rgb){
+        return 'rgb('+rgb.r+','+rgb.g+','+rgb.b+')'
+    }
+
+    function toHex(n){
+        n=n>255 ?255 : n<0 ?0 :n
+        return n<16? '0'+n.toString(16) :n.toString(16)
+    }
+    function reverse(rgb){
+        return new RGB(255-rgb.r,255-rgb.g,255-rgb.b)
+    }
+
+    function RGB(r,g,b){
+        this.r=r
+        this.g=g
+        this.b=b
+    }
+    RGB.prototype.hex=function(){
+        return '#'+toHex(this.r)+toHex(this.g)+toHex(this.b)
+    },
+    RGB.prototype.rgb=function(){
+        return 'rgb('+this.r+','+this.g+','+this.b+')'        
+    }
+    RGB.prototype.reverse=function(){
+        this.r=255-this.r
+        this.g=255-this.g
+        this.b=255-this.b
+        return this
+    }
+</script>
+</body>
+</html>
